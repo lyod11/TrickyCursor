@@ -1,5 +1,4 @@
 // TrickyCursor.cpp : Defines the entry point for the application.
-//
 
 #include "stdafx.h"
 #include "TrickyCursor.h"
@@ -29,10 +28,9 @@ BOOL                InitInstance(HINSTANCE, int);
 void				ShowContextMenu(HWND hWnd);
 std::wstring		GetSturtupFolderPath();
 HRESULT				CreateLink(std::wstring pathObj, std::wstring pathLink, LPCWSTR lpszDesc);
-HRESULT				ResolveIt(HWND hwnd, std::wstring linkFile, std::wstring filePath);
+HRESULT				RemoveStartupFile(std::wstring pathLink);
 
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -55,7 +53,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	std::wstring exePath = std::wstring(buffer, GetModuleFileName(NULL, buffer, MAX_PATH));
 
 	//HRESULT res = CreateLink(exePath, startupPath, NULL);
-	HRESULT res = ResolveIt(NULL, exePath, startupPath);
+	HRESULT res = RemoveStartupFile(startupPath);
 	
     // Main message loop:
     while (GetMessage(&msg, nullptr, 0, 0))
@@ -260,7 +258,7 @@ HRESULT CreateLink(std::wstring pathObj, std::wstring pathLink, LPCWSTR lpszDesc
 
 			// Save the link by calling IPersistFile::Save. 
 			hres = _wmakepath_s(wsz, _MAX_PATH, NULL, pathLink.c_str(),
-				L"MediaMaestro", L"lnk");
+				L"TrickyCursor", L"lnk");
 			hres = ppf->Save(wsz, TRUE);
 			ppf->Release();
 		}
@@ -287,7 +285,7 @@ HRESULT CreateLink(std::wstring pathObj, std::wstring pathLink, LPCWSTR lpszDesc
 //                properties.
 
 
-
+/*
 HRESULT ResolveIt(HWND hwnd, std::wstring linkFile, std::wstring filePath)
 {
 	HRESULT hres;
@@ -353,4 +351,13 @@ HRESULT ResolveIt(HWND hwnd, std::wstring linkFile, std::wstring filePath)
 		psl->Release();
 	}
 	return hres;
+}*/
+
+HRESULT RemoveStartupFile(std::wstring pathLink)
+{
+	WCHAR wsz[MAX_PATH];
+	HRESULT hres = _wmakepath_s(wsz, _MAX_PATH, NULL, pathLink.c_str(),
+		L"TrickyCursor", L"lnk");
+	//pathLink.append(L"//TrickyCursor.lnk");
+	return DeleteFile(wsz);
 }
