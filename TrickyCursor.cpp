@@ -24,15 +24,11 @@ HCURSOR hNewCursor;
 BOOL defaultCursorFlag = TRUE;
 
 
-// Forward declarations of functions included in this code module:
-//ATOM                MyRegisterClass(HINSTANCE hInstance);
-
-
-
-
 BOOL                InitInstance(HINSTANCE, int);
 void				ShowContextMenu(HWND hWnd);
-
+std::wstring		GetSturtupFolderPath();
+HRESULT				CreateLink(std::wstring pathObj, std::wstring pathLink, LPCWSTR lpszDesc);
+HRESULT				ResolveIt(HWND hwnd, std::wstring linkFile, std::wstring filePath);
 
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
@@ -53,11 +49,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     MSG msg;
 
-	hcDefault = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
-	hNewCursor = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_CROSS)));
+	TCHAR buffer[MAX_PATH];
+	std::wstring startupPath = GetSturtupFolderPath();
+	std::wstring exePath = std::wstring(buffer, GetModuleFileName(NULL, buffer, MAX_PATH));
 
-
-
+	//HRESULT res = CreateLink(exePath, startupPath, NULL);
+	HRESULT res = ResolveIt(NULL, startupPath, exePath);
+	
     // Main message loop:
     while (GetMessage(&msg, nullptr, 0, 0))
     {
@@ -77,6 +75,9 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    HWND hDlg = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_TRICKYCURSOR_DIALOG),
 	   NULL, (DLGPROC)WndProc);
+
+   hcDefault = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
+   hNewCursor = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_CROSS)));
 
    if (!hDlg)
    {
@@ -100,17 +101,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    return TRUE;
 }
-
-//
-//  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
-//
-//  PURPOSE:  Processes messages for the main window.
-//
-//  WM_COMMAND  - process the application menu
-//  WM_PAINT    - Paint the main window
-//  WM_DESTROY  - post a quit message and return
-//
-//
 
 void ShowContextMenu(HWND hDlg)
 {
@@ -188,19 +178,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 			break;
 		case SWM_EXIT:
-			DestroyWindow(hWnd);
+			//DestroyWindow(hWnd);
 			break;
 		}
-    case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: Add any drawing code that uses hdc here...
-            EndPaint(hWnd, &ps);
-        }
-        break;
     case WM_DESTROY:
-        PostQuitMessage(0);
+      //  PostQuitMessage(0);
         break;
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
@@ -208,29 +190,157 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-// Message handler for about box.
-INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    UNREFERENCED_PARAMETER(lParam);
-    switch (message)
-    {
-    case WM_INITDIALOG:
-        return (INT_PTR)TRUE;
 
-    case WM_COMMAND:
-        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-        {
-            EndDialog(hDlg, LOWORD(wParam));
-            return (INT_PTR)TRUE;
-        }
-        break;
-    }
-    return (INT_PTR)FALSE;
-}
-/*
-void AddToStartup(string name)
+std::wstring GetSturtupFolderPath()
 {
-	RegistryKey rkApp = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
-	rkApp.SetValue("TrickyCursor.exe", Application.ExecutablePath.ToString());
+	PWSTR pszPath;
+	HRESULT hr = SHGetKnownFolderPath(FOLDERID_Startup, 0, NULL, &pszPath);
+	if (SUCCEEDED(hr))
+	{
+		// The function succeeded, so copy the returned path to a
+		// C++ string, free the memory allocated by the function,
+		// and return the path string.
+		std::wstring path(pszPath);
+		CoTaskMemFree(static_cast<LPVOID>(pszPath));
+		return path;
+	}
+	else
+	{
+		// The function failed, so handle the error.
+		// ...
+		// You might want to throw an exception, or just return an
+		// empty string here.
+		throw std::runtime_error("The SHGetKnownFolderPath function failed");
+	}
 }
-*/
+
+// code from msdn
+HRESULT CreateLink(std::wstring pathObj, std::wstring pathLink, LPCWSTR lpszDesc)
+{
+	HRESULT hres;
+	IShellLink* psl;
+	CoInitialize(nullptr);
+	// Get a pointer to the IShellLink interface. It is assumed that CoInitialize
+	// has already been called.
+	hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&psl);
+	if (SUCCEEDED(hres))
+	{
+		IPersistFile* ppf;
+
+		// Set the path to the shortcut target and add the description. 
+		psl->SetPath(pathObj.c_str());
+		psl->SetDescription(lpszDesc);
+
+		// Query IShellLink for the IPersistFile interface, used for saving the 
+		// shortcut in persistent storage. 
+		hres = psl->QueryInterface(IID_IPersistFile, (LPVOID*)&ppf);
+
+		if (SUCCEEDED(hres))
+		{
+			//WCHAR wsz[MAX_PATH];
+
+			// Ensure that the string is Unicode. 
+			//MultiByteToWideChar(CP_ACP, 0, lpszPathLink, -1, wsz, MAX_PATH);
+
+			//const WCHAR * wsz;
+			WCHAR wsz[MAX_PATH];
+
+			// Add code here to check return value from MultiByteWideChar 
+			// for success.
+
+			// Save the link by calling IPersistFile::Save. 
+			hres = _wmakepath_s(wsz, _MAX_PATH, NULL, pathLink.c_str(),
+				L"MediaMaestro", L"lnk");
+			hres = ppf->Save(wsz, TRUE);
+			ppf->Release();
+		}
+		psl->Release();
+	}
+	return hres;
+}
+
+
+// ResolveIt - Uses the Shell's IShellLink and IPersistFile interfaces 
+//             to retrieve the path and description from an existing shortcut. 
+//
+// Returns the result of calling the member functions of the interfaces. 
+//
+// Parameters:
+// hwnd         - A handle to the parent window. The Shell uses this window to 
+//                display a dialog box if it needs to prompt the user for more 
+//                information while resolving the link.
+// lpszLinkFile - Address of a buffer that contains the path of the link,
+//                including the file name.
+// lpszPath     - Address of a buffer that receives the path of the link target, including the file name.
+// lpszDesc     - Address of a buffer that receives the description of the 
+//                Shell link, stored in the Comment field of the link
+//                properties.
+
+
+
+HRESULT ResolveIt(HWND hwnd, std::wstring linkFile, std::wstring filePath)
+{
+	HRESULT hres;
+	IShellLink* psl;
+	WCHAR szGotPath[MAX_PATH];
+	WCHAR szDescription[MAX_PATH];
+	WIN32_FIND_DATA wfd;
+
+	CoInitialize(nullptr);
+
+	//filePath = 0; // Assume failure 
+//	filePath.clear;
+
+				   // Get a pointer to the IShellLink interface. It is assumed that CoInitialize
+				   // has already been called. 
+	hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&psl);
+	if (SUCCEEDED(hres))
+	{
+		IPersistFile* ppf;
+
+		// Get a pointer to the IPersistFile interface. 
+		hres = psl->QueryInterface(IID_IPersistFile, (void**)&ppf);
+
+		if (SUCCEEDED(hres))
+		{
+			WCHAR wsz[MAX_PATH];
+
+			// Ensure that the string is Unicode. 
+			hres = _wmakepath_s(wsz, _MAX_PATH, NULL, linkFile.c_str(),
+				L"MediaMaestro", L"lnk");
+
+			// Add code here to check return value from MultiByteWideChar 
+			// for success.
+
+			// Load the shortcut. 
+			hres = ppf->Load(wsz, STGM_READ);
+
+			// Add code here to check return value from MultiByteWideChar 
+			// for success.
+
+			if (SUCCEEDED(hres))
+			{
+				// Resolve the link. 
+				hres = psl->Resolve(hwnd, 0);
+
+				if (SUCCEEDED(hres))
+				{
+					// Get the path to the link target. 
+					hres = psl->GetPath(szGotPath, MAX_PATH, (WIN32_FIND_DATA*)&wfd, SLGP_SHORTPATH);
+
+					if (SUCCEEDED(hres))
+					{
+						// Get the description of the target. 
+						hres = psl->GetDescription(szDescription, MAX_PATH);
+					}
+				}
+			}
+			// Release the pointer to the IPersistFile interface. 
+			ppf->Release();
+		}
+
+		// Release the pointer to the IShellLink interface. 
+		psl->Release();
+	}
+	return hres;
+}

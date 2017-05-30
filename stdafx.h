@@ -11,6 +11,8 @@
 // Windows Header Files:
 #include <windows.h>
 #include <Shellapi.h>
+#include <Shlobj.h>
+#include <stdlib.h>
 
 // C RunTime Header Files
 #include <stdlib.h>
