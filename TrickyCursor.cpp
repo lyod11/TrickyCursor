@@ -5,6 +5,12 @@
 #include "TrickyCursor.h"
 
 #define MAX_LOADSTRING 100
+#define TRAYICONID	1//				ID number for the Notify Icon
+#define SWM_TRAYMSG	WM_APP//		the message ID sent to our window
+
+#define SWM_SHOW	WM_APP + 1//	show the window
+#define SWM_HIDE	WM_APP + 2//	hide the window
+#define SWM_EXIT	WM_APP + 3//	close the window
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
@@ -104,22 +110,27 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    hInst = hInstance; // Store instance handle in our global variable
 
-   /*HWND hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);*/
-
    HWND hDlg = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_TRICKYCURSOR_DIALOG),
 	   NULL, (DLGPROC)WndProc);
-  
-
-
 
    if (!hDlg)
    {
-      return FALSE;
+	   return FALSE;
    }
+  
+   niData.cbSize = sizeof(NOTIFYICONDATA);
+   niData.uID = TRAYICONID;
+   niData.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+   niData.hIcon = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_TRICKYCURSOR),
+	   IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON),
+	   LR_DEFAULTCOLOR);
+   niData.hWnd = hDlg;
+   niData.uCallbackMessage = SWM_TRAYMSG;
 
-   //ShowWindow(hDlg, nCmdShow);
-  // UpdateWindow(hDlg);
+   Shell_NotifyIcon(NIM_ADD, &niData);
+
+   if (niData.hIcon && DestroyIcon(niData.hIcon))  //free handle
+	   niData.hIcon = NULL;
 
    return TRUE;
 }
