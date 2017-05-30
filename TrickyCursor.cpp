@@ -8,9 +8,11 @@
 #define TRAYICONID	1//				ID number for the Notify Icon
 #define SWM_TRAYMSG	WM_APP//		the message ID sent to our window
 
-#define SWM_SHOW	WM_APP + 1//	show the window
-#define SWM_HIDE	WM_APP + 2//	hide the window
-#define SWM_EXIT	WM_APP + 3//	close the window
+
+#define SWM_ENABLE	WM_APP + 1	
+#define SWM_DISABLE	WM_APP + 2	
+#define SWM_LAUNCH	WM_APP + 3
+#define SWM_EXIT	WM_APP + 4
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
@@ -155,26 +157,20 @@ void ShowContextMenu(HWND hDlg)
 	HMENU hSubMenu = CreatePopupMenu();
 	if (hMenu)
 	{
+		//if default cursor
 		if (IsWindowVisible(hDlg))
-			InsertMenu(hMenu, -1, MF_BYPOSITION, SWM_HIDE, _T("Hide"));
+			InsertMenu(hMenu, -1, MF_BYPOSITION, SWM_ENABLE, _T("Enable"));
 		else
-			InsertMenu(hMenu, -1, MF_BYPOSITION, SWM_SHOW, _T("Show"));
-		//InsertMenu(hMenu, -1, MF_BYPOSITION | MF_POPUP, SWM_EXIT, _T("Exit"));
+			InsertMenu(hMenu, -1, MF_BYPOSITION, SWM_DISABLE, _T("Disable"));
 		AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, _T("Settings"));
-		//AppendMenu(hSubMenu, MF_POPUP, (UINT_PTR)hSubMenu, _T("Launch at Windows Login"));
-		InsertMenu(hSubMenu, -1, MF_BYPOSITION, SWM_EXIT, _T("Launch at Windows Login"));
-
-		/*AppendMenu(hMenubar, MF_POPUP, (UINT_PTR)hMenu, "Menu");
-		AppendMenu(hMenu, MF_STRING, ID_SM, "Sub Menu");
-		AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT_PTR)hSubMenu, "Sub-Sub Menu");
-
-		SetMenu(hwnd, hMenubar);*/
-	
+		InsertMenu(hSubMenu, -1, MF_BYPOSITION, SWM_LAUNCH, _T("Launch at Windows Login"));
+		InsertMenu(hMenu, -1, MF_BYPOSITION, SWM_EXIT, _T("Exit"));
 
 
 		// note:	must set window to the foreground or the
 		//			menu won't disappear when it should
-	//	SetForegroundWindow(hDlg);
+		
+		SetForegroundWindow(hDlg);
 
 		TrackPopupMenu(hMenu, TPM_BOTTOMALIGN,
 			pt.x, pt.y, 0, hDlg, NULL);
@@ -186,6 +182,7 @@ void ShowContextMenu(HWND hDlg)
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	int wmId, wmEvent;
     switch (message)
     {
 
@@ -198,22 +195,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 
     case WM_COMMAND:
-        {
-            int wmId = LOWORD(wParam);
-            // Parse the menu selections:
-            switch (wmId)
-            {
-            case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                break;
-            case IDM_EXIT:
-                DestroyWindow(hWnd);
-                break;
-            default:
-                return DefWindowProc(hWnd, message, wParam, lParam);
-            }
-        }
-        break;
+		wmId = LOWORD(wParam);
+		wmEvent = HIWORD(wParam);
+
+		switch (wmId)
+		{
+		case SWM_DISABLE:
+			ShowWindow(hWnd, SW_RESTORE);
+			break;
+		case SWM_ENABLE:
+			break;
+		case SWM_LAUNCH:
+			break;
+		case SWM_EXIT:
+			DestroyWindow(hWnd);
+			break;
+		}
     case WM_PAINT:
         {
             PAINTSTRUCT ps;
