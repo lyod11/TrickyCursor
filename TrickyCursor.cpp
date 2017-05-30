@@ -17,6 +17,7 @@
 // Global Variables:
 HINSTANCE hInst;                                // current instance
 NOTIFYICONDATA niData;	//for system tray icon
+HCURSOR hcDefault;
 
 
 // Forward declarations of functions included in this code module:
@@ -37,15 +38,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_ LPWSTR    lpCmdLine,
                      _In_ int       nCmdShow)
 {
-  //  UNREFERENCED_PARAMETER(hPrevInstance);
-  //  UNREFERENCED_PARAMETER(lpCmdLine);
-
-    // TODO: Place code here.
-
-    // Initialize global strings
-  //  LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
- //   LoadStringW(hInstance, IDC_TRICKYCURSOR, szWindowClass, MAX_LOADSTRING);
-   // MyRegisterClass(hInstance);
 
     // Perform application initialization:
     if (!InitInstance (hInstance, nCmdShow))
@@ -56,6 +48,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_TRICKYCURSOR));
 
     MSG msg;
+
+	hcDefault = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
+	HCURSOR hNewCursor = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_CROSS)));
+	SetSystemCursor(hNewCursor, 32512);
 
     // Main message loop:
     while (GetMessage(&msg, nullptr, 0, 0))
@@ -70,44 +66,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     return (int) msg.wParam;
 }
 
-
-
-//
-//  FUNCTION: MyRegisterClass()
-//
-//  PURPOSE: Registers the window class.
-//
-/*ATOM MyRegisterClass(HINSTANCE hInstance)
-{
-    WNDCLASSEXW wcex;
-
-    wcex.cbSize = sizeof(WNDCLASSEX);
-
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc    = WndProc;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_TRICKYCURSOR));
-    wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_TRICKYCURSOR);
-    wcex.lpszClassName  = szWindowClass;
-    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
-
-    return RegisterClassExW(&wcex);
-}*/
-
-//
-//   FUNCTION: InitInstance(HINSTANCE, int)
-//
-//   PURPOSE: Saves instance handle and creates main window
-//
-//   COMMENTS:
-//
-//        In this function, we save the instance handle in a global variable and
-//        create and display the main program window.
-//
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    hInst = hInstance; // Store instance handle in our global variable
@@ -185,6 +143,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	int wmId, wmEvent;
     switch (message)
     {
+	case WM_SETCURSOR:
+	
+		// If we're the control that should get the cursor treatment...
+			//SetCursor(hcCross);
+			return TRUE;  // indicate we processed this message
 
 	case SWM_TRAYMSG:
 		switch (lParam)
@@ -201,11 +164,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		switch (wmId)
 		{
 		case SWM_DISABLE:
-			ShowWindow(hWnd, SW_RESTORE);
+			
 			break;
 		case SWM_ENABLE:
 			break;
 		case SWM_LAUNCH:
+			SetSystemCursor(hcDefault, 32512);
+			DestroyCursor(hcDefault);
+			hcDefault = NULL;
 			break;
 		case SWM_EXIT:
 			DestroyWindow(hWnd);
