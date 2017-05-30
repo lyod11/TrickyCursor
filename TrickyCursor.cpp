@@ -9,6 +9,7 @@
 #define MAX_LOADSTRING 100
 #define TRAYICONID	1//				ID number for the Notify Icon
 #define SWM_TRAYMSG	WM_APP//		the message ID sent to our window
+#define DEFAULT_CURSOR 32512
 
 
 #define SWM_ENABLE	WM_APP + 1	
@@ -54,7 +55,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	std::wstring exePath = std::wstring(buffer, GetModuleFileName(NULL, buffer, MAX_PATH));
 
 	//HRESULT res = CreateLink(exePath, startupPath, NULL);
-	HRESULT res = ResolveIt(NULL, startupPath, exePath);
+	HRESULT res = ResolveIt(NULL, exePath, startupPath);
 	
     // Main message loop:
     while (GetMessage(&msg, nullptr, 0, 0))
@@ -151,6 +152,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case WM_RBUTTONDOWN:
 		case WM_CONTEXTMENU:
 			ShowContextMenu(hWnd);
+			break;
 		}
 
     case WM_COMMAND:
@@ -160,29 +162,37 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		switch (wmId)
 		{
 		case SWM_DISABLE:
-			SetSystemCursor(hcDefault, 32512);
-			DestroyCursor(hcDefault);
-			hcDefault = NULL;
+			
+			SetSystemCursor(hcDefault, DEFAULT_CURSOR);
 			defaultCursorFlag = TRUE;
 
 			break;
 		case SWM_ENABLE:
-			
-			SetSystemCursor(hNewCursor, 32512);
+			hNewCursor = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_CROSS)));
+			hcDefault = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
+			SetSystemCursor(hNewCursor, DEFAULT_CURSOR);
 			defaultCursorFlag = FALSE;
-			/*DestroyCursor(hNewCursor);
-			hcDefault = NULL;*/
+			DestroyCursor(hNewCursor);
+			hNewCursor = NULL;
 
 			break;
 		case SWM_LAUNCH:
 
 			break;
 		case SWM_EXIT:
-			//DestroyWindow(hWnd);
+			if (defaultCursorFlag == false)
+			{
+				SetSystemCursor(hcDefault, 32512);
+				DestroyCursor(hcDefault);
+				hcDefault = NULL;
+				defaultCursorFlag = TRUE;
+			}
+			DestroyWindow(hWnd);
+			PostQuitMessage(0);
 			break;
 		}
     case WM_DESTROY:
-      //  PostQuitMessage(0);
+       // PostQuitMessage(0);
         break;
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
