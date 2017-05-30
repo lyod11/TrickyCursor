@@ -4,6 +4,8 @@
 #include "stdafx.h"
 #include "TrickyCursor.h"
 
+
+
 #define MAX_LOADSTRING 100
 #define TRAYICONID	1//				ID number for the Notify Icon
 #define SWM_TRAYMSG	WM_APP//		the message ID sent to our window
@@ -18,6 +20,8 @@
 HINSTANCE hInst;                                // current instance
 NOTIFYICONDATA niData;	//for system tray icon
 HCURSOR hcDefault;
+HCURSOR hNewCursor;
+BOOL defaultCursorFlag = TRUE;
 
 
 // Forward declarations of functions included in this code module:
@@ -50,8 +54,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     MSG msg;
 
 	hcDefault = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
-	HCURSOR hNewCursor = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_CROSS)));
-	SetSystemCursor(hNewCursor, 32512);
+	hNewCursor = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_CROSS)));
+
+
 
     // Main message loop:
     while (GetMessage(&msg, nullptr, 0, 0))
@@ -77,6 +82,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    {
 	   return FALSE;
    }
+
   
    niData.cbSize = sizeof(NOTIFYICONDATA);
    niData.uID = TRAYICONID;
@@ -116,7 +122,7 @@ void ShowContextMenu(HWND hDlg)
 	if (hMenu)
 	{
 		//if default cursor
-		if (IsWindowVisible(hDlg))
+		if (defaultCursorFlag == TRUE)
 			InsertMenu(hMenu, -1, MF_BYPOSITION, SWM_ENABLE, _T("Enable"));
 		else
 			InsertMenu(hMenu, -1, MF_BYPOSITION, SWM_DISABLE, _T("Disable"));
@@ -164,14 +170,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		switch (wmId)
 		{
 		case SWM_DISABLE:
-			
-			break;
-		case SWM_ENABLE:
-			break;
-		case SWM_LAUNCH:
 			SetSystemCursor(hcDefault, 32512);
 			DestroyCursor(hcDefault);
 			hcDefault = NULL;
+			defaultCursorFlag = TRUE;
+
+			break;
+		case SWM_ENABLE:
+			
+			SetSystemCursor(hNewCursor, 32512);
+			defaultCursorFlag = FALSE;
+			/*DestroyCursor(hNewCursor);
+			hcDefault = NULL;*/
+
+			break;
+		case SWM_LAUNCH:
+
 			break;
 		case SWM_EXIT:
 			DestroyWindow(hWnd);
@@ -213,3 +227,10 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     }
     return (INT_PTR)FALSE;
 }
+/*
+void AddToStartup(string name)
+{
+	RegistryKey rkApp = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+	rkApp.SetValue("TrickyCursor.exe", Application.ExecutablePath.ToString());
+}
+*/
