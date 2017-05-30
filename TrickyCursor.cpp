@@ -145,10 +145,58 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //  WM_DESTROY  - post a quit message and return
 //
 //
+
+void ShowContextMenu(HWND hDlg)
+{
+	POINT pt;
+	GetCursorPos(&pt);
+
+	HMENU hMenu = CreatePopupMenu();
+	HMENU hSubMenu = CreatePopupMenu();
+	if (hMenu)
+	{
+		if (IsWindowVisible(hDlg))
+			InsertMenu(hMenu, -1, MF_BYPOSITION, SWM_HIDE, _T("Hide"));
+		else
+			InsertMenu(hMenu, -1, MF_BYPOSITION, SWM_SHOW, _T("Show"));
+		//InsertMenu(hMenu, -1, MF_BYPOSITION | MF_POPUP, SWM_EXIT, _T("Exit"));
+		AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, _T("Settings"));
+		//AppendMenu(hSubMenu, MF_POPUP, (UINT_PTR)hSubMenu, _T("Launch at Windows Login"));
+		InsertMenu(hSubMenu, -1, MF_BYPOSITION, SWM_EXIT, _T("Launch at Windows Login"));
+
+		/*AppendMenu(hMenubar, MF_POPUP, (UINT_PTR)hMenu, "Menu");
+		AppendMenu(hMenu, MF_STRING, ID_SM, "Sub Menu");
+		AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT_PTR)hSubMenu, "Sub-Sub Menu");
+
+		SetMenu(hwnd, hMenubar);*/
+	
+
+
+		// note:	must set window to the foreground or the
+		//			menu won't disappear when it should
+	//	SetForegroundWindow(hDlg);
+
+		TrackPopupMenu(hMenu, TPM_BOTTOMALIGN,
+			pt.x, pt.y, 0, hDlg, NULL);
+		DestroyMenu(hMenu);
+		DestroyMenu(hSubMenu);
+	}
+}
+
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
+
+	case SWM_TRAYMSG:
+		switch (lParam)
+		{
+		case WM_RBUTTONDOWN:
+		case WM_CONTEXTMENU:
+			ShowContextMenu(hWnd);
+		}
+
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
