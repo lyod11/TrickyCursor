@@ -3,6 +3,9 @@
 // are changed infrequently
 //
 
+#ifndef STDAFX_H
+#define STDAFX_H
+
 #pragma once
 
 #include "targetver.h"
@@ -13,6 +16,8 @@
 #include <Shellapi.h>
 #include <Shlobj.h>
 #include <stdlib.h>
+#include <iostream>
+#include <iomanip>
 
 // C RunTime Header Files
 #include <stdlib.h>
@@ -22,3 +27,6 @@
 
 
 // TODO: reference additional headers your program requires here
+
+
+#endif

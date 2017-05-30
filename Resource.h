@@ -3,13 +3,12 @@
 // Used by TrickyCursor.rc
 //
 
+
+#define RESOURCE_H
+
 #define IDS_APP_TITLE			103
 
-
-#define IDR_MANIFEST                    1
-
-
-
+#define IDR_MANIFEST            1
 #define IDR_MAINFRAME			128
 #define IDD_TRICKYCURSOR_DIALOG	102
 #define IDD_ABOUTBOX			103
@@ -22,6 +21,14 @@
 #ifndef IDC_STATIC
 #define IDC_STATIC				-1
 #endif
+
+#define SWM_ENABLE				WM_APP + 1	
+#define SWM_DISABLE				WM_APP + 2	
+#define SWM_LAUNCH_UNCHECKED	WM_APP + 3
+#define SWM_LAUNCH_CHECKED		WM_APP + 4
+#define SWM_EXIT				WM_APP + 5
+
+
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
