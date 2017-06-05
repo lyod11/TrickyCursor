@@ -2,8 +2,11 @@
 
 #include "Resource.h"
 #include "stdafx.h"
+//#include <Gdiplusgraphics.h>
+
 
 #define DEFAULT_CURSOR 32512
+#define _AFXDLL
 
 class Cursor
 {
@@ -17,5 +20,8 @@ public:
 	void SetDefaultCursor();
 	void SetCustomCursor();
 	void DeleteCursor();
+	void rotateCursor();
+	void rotateBitmap(HBITMAP &bmp, HPALETTE plt, int angle);
+
 };
 

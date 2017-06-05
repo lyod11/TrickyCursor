@@ -3,19 +3,26 @@
 // are changed infrequently
 //
 
-#ifndef STDAFX_H
-#define STDAFX_H
+
 
 #pragma once
 
 #include "targetver.h"
 
+#define WINVER 0x0600
+#define _WIN32_WINNT 0x0600
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 // Windows Header Files:
+#include <afxwin.h>
 #include <windows.h>
-#include <Shellapi.h>
-#include <Shlobj.h>
 #include <stdlib.h>
+#include <objidl.h>
+#include <Gdiplus.h>
+//using namespace Gdiplus;
+
+#pragma comment (lib,"Gdiplus.lib")
+//#include <Shellapi.h>
+#include <Shlobj.h>
 #include <iostream>
 #include <iomanip>
 
@@ -26,7 +33,4 @@
 #include <tchar.h>
 
 
-// TODO: reference additional headers your program requires here
 
-
-#endif

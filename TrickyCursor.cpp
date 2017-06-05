@@ -98,7 +98,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 			break;
 		case SWM_ENABLE:
-			cursor->SetCustomCursor();
+			//cursor->SetCustomCursor();
+			//cursor->TestCursor(hInst);
+			cursor->rotateCursor();
 			defaultCursorFlag = FALSE;
 
 			break;

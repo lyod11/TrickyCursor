@@ -8,6 +8,10 @@ Cursor::Cursor()
 	hNewCursor = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_CROSS)));
 }
 
+Cursor::~Cursor()
+{
+}
+
 void Cursor::SetDefaultCursor()
 {
 	SetSystemCursor(hcDefault, DEFAULT_CURSOR);
@@ -29,6 +33,43 @@ void Cursor::DeleteCursor()
 	hcDefault = NULL;
 }
 
-Cursor::~Cursor()
+
+void Cursor::rotateCursor()
 {
+	int angle = 130; // TODO: calculate 
+
+	HCURSOR testCursor = LoadCursor(NULL, MAKEINTRESOURCE(IDC_CROSS));
+	ICONINFO cInfo;
+	GetIconInfo(testCursor, &cInfo);
+
+	HBITMAP hbtm = cInfo.hbmMask;
+
+	// Initialize GDI+.
+	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+	ULONG_PTR gdiplusToken;
+	Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+
+	rotateBitmap(hbtm, NULL, angle); //PALETTE??
+	cInfo.hbmMask = hbtm;
+
+	HCURSOR cusor = CreateIconIndirect(&cInfo);
+	SetSystemCursor(cusor, DEFAULT_CURSOR);
+	DestroyCursor(cusor);
+	cusor = NULL;
+	
 }
+
+
+
+void Cursor::rotateBitmap(HBITMAP &hbtm, HPALETTE plt, int angle) {
+
+	Gdiplus::Bitmap *cursorBmp = new  Gdiplus::Bitmap(hbtm, plt);
+	Gdiplus::Graphics *graph = new Gdiplus::Graphics(cursorBmp);
+
+	graph->RotateTransform(angle);
+
+	cursorBmp->GetHBITMAP(Gdiplus::Color::Black, &hbtm); //hbmp = rotated bitmap
+
+}
+
+
