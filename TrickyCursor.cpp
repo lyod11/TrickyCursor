@@ -7,7 +7,7 @@
 HINSTANCE hInst;                                // current instance
 BOOL defaultCursorFlag = TRUE;
 BOOL startupLaunchFlag = FALSE;
-Cursor *cursor;
+//Cursor *cursor;
 LaunchHelper *launchHelper;
 Menu *menu;
 
@@ -61,7 +61,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	   return FALSE;
    }
 
-   cursor = new Cursor();
+//   cursor = new Cursor();
+   Cursor::getInstance();
    launchHelper = new LaunchHelper(hInstance, hDlg);
    menu = new Menu();
 
@@ -74,36 +75,34 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	int wmId, wmEvent;
     switch (message)
     {
-	case WM_SETCURSOR:
+		case WM_SETCURSOR:
+		case SWM_TRAYMSG:
+			switch (lParam)
+			{
+			case WM_RBUTTONDOWN:
+			case WM_CONTEXTMENU:
+				menu->ShowContextMenu(hWnd, defaultCursorFlag, startupLaunchFlag);
+				break;
+			}
 
-	case SWM_TRAYMSG:
-		switch (lParam)
-		{
-		case WM_RBUTTONDOWN:
-		case WM_CONTEXTMENU:
-			menu->ShowContextMenu(hWnd, defaultCursorFlag, startupLaunchFlag);
-			break;
-		}
-
-    case WM_COMMAND:
+	 case WM_COMMAND:
 		wmId = LOWORD(wParam);
 		wmEvent = HIWORD(wParam);
 
 		switch (wmId)
 		{
 		case SWM_DISABLE:
-			
-			cursor->SetDefaultCursor();
 			defaultCursorFlag = TRUE;
-
+			MouseHook::getInstance().releaseHook();
+			Cursor::getInstance().SetDefaultCursor();
 			break;
+
 		case SWM_ENABLE:
-			//cursor->SetCustomCursor();
-			//cursor->TestCursor(hInst);
-			cursor->rotateCursor();
 			defaultCursorFlag = FALSE;
-
+			MouseHook::getInstance().setHook();
+		    MouseHook::getInstance().loopThroughMessages();
 			break;
+
 		case SWM_LAUNCH_CHECKED:
 			launchHelper->RemoveStartupFile();
 			startupLaunchFlag = FALSE;
@@ -113,19 +112,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			launchHelper->CreateShortcutLink();
 			startupLaunchFlag = TRUE;
 			break;
+
 		case SWM_EXIT:
-			if (defaultCursorFlag == false)
+			if (defaultCursorFlag == FALSE)
 			{
-				cursor->SetDefaultCursor();
-				cursor->DeleteCursor();
+				MouseHook::getInstance().releaseHook();
+				Cursor::getInstance().SetDefaultCursor();
 				defaultCursorFlag = TRUE;
 			}
-			delete cursor;
+			
 			delete launchHelper;
 			delete menu;
 			DestroyWindow(hWnd);
-			PostQuitMessage(0);
-			break;
+			//PostQuitMessage(0);
+			ExitProcess(0);
+			return 1;
 		}
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);

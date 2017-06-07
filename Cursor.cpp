@@ -4,27 +4,55 @@
 
 Cursor::Cursor()
 {
+	prevPosition.x = NULL;   
 	hcDefault = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
-	hNewCursor = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_CROSS)));
 }
 
-Cursor::~Cursor()
+Cursor & Cursor::getInstance()
 {
+	static Cursor cursor = Cursor();
+	return cursor;
 }
 
 void Cursor::SetDefaultCursor()
 {
-	SetSystemCursor(hcDefault, DEFAULT_CURSOR);
+	BOOL status = SetSystemCursor(hcDefault, DEFAULT_CURSOR);
+	DestroyCursor(hcDefault);
+	hcDefault = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
 }
 
-void Cursor::SetCustomCursor()
+void Cursor::SetCustomCursor(POINT &coordinates)
 {
-	hNewCursor = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_CROSS)));
-	hcDefault = CopyCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
-	SetSystemCursor(hNewCursor, DEFAULT_CURSOR);
+	
+	if (prevPosition.x == NULL) {
+		prevPosition = coordinates;
+		return;
+	}
+	int angle = getCursorAngle(coordinates);
+	if (angle == -1)
+		return;
 
-	DestroyCursor(hNewCursor);
-	hNewCursor = NULL;
+	wchar_t buffer[BUFF_SIZE];
+	wchar_t path[BUFF_SIZE];
+	GetCurrentDirectory(BUFF_SIZE, path);
+	lstrcatW(path, CURSOR_PATH);
+	_itow_s(angle, buffer, 10);
+	lstrcatW(path, buffer);
+	lstrcatW(path, L".cur");
+
+	/*wchar_t wtext[BUFF_SIZE];
+	size_t outSize;
+	mbstowcs_s(&outSize, wtext, path, strlen(path) + 1);
+	LPCWSTR newPath = wtext;*/
+
+	HCURSOR newCursor = CopyCursor(LoadCursorFromFile(path));
+
+	SetSystemCursor(newCursor, DEFAULT_CURSOR);
+	DestroyCursor(newCursor);
+
+	prevPosition = coordinates;
+
+	
 }
 
 void Cursor::DeleteCursor()
@@ -34,42 +62,39 @@ void Cursor::DeleteCursor()
 }
 
 
-void Cursor::rotateCursor()
+
+int Cursor::getCursorAngle(POINT &currPosition)
 {
-	int angle = 130; // TODO: calculate 
+	double a = currPosition.x - prevPosition.x;
+	double b = -(currPosition.y - prevPosition.y);
+	if((a != 0) && (a < MEASUREMENT_ERROR) && (a > -MEASUREMENT_ERROR))
+		if((b !=0) && (b < MEASUREMENT_ERROR) && (b > -MEASUREMENT_ERROR))
+			return -1;
 
-	HCURSOR testCursor = LoadCursor(NULL, MAKEINTRESOURCE(IDC_CROSS));
-	ICONINFO cInfo;
-	GetIconInfo(testCursor, &cInfo);
+	double angle;
 
-	HBITMAP hbtm = cInfo.hbmMask;
+	if (b == 0)
+		angle = 90;
+	else
+		angle = abs(atan(a / b))*RADIAN;
 
-	// Initialize GDI+.
-	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
-	ULONG_PTR gdiplusToken;
-	Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+	if(a >= 0 && b < 0){ // II quarter
+		angle = 180 - angle;
+	} else if (a < 0 && b < 0){	// III quarter
+		angle = 270 - angle;
+	} else if(a < 0 && b >= 0){	// IV quarter
+		angle = 360 - angle;	
+	}
 
-	rotateBitmap(hbtm, NULL, angle); //PALETTE??
-	cInfo.hbmMask = hbtm;
 
-	HCURSOR cusor = CreateIconIndirect(&cInfo);
-	SetSystemCursor(cusor, DEFAULT_CURSOR);
-	DestroyCursor(cusor);
-	cusor = NULL;
-	
+	for (int i = 0; i < CURSOR_NUMBERS - 1; i++)
+	{
+		if (angle >= avalibleCursorAngles[i] && angle < avalibleCursorAngles[i+1])
+			return avalibleCursorAngles[i];
+	}
+	return -1;
 }
 
 
-
-void Cursor::rotateBitmap(HBITMAP &hbtm, HPALETTE plt, int angle) {
-
-	Gdiplus::Bitmap *cursorBmp = new  Gdiplus::Bitmap(hbtm, plt);
-	Gdiplus::Graphics *graph = new Gdiplus::Graphics(cursorBmp);
-
-	graph->RotateTransform(angle);
-
-	cursorBmp->GetHBITMAP(Gdiplus::Color::Black, &hbtm); //hbmp = rotated bitmap
-
-}
 
 
