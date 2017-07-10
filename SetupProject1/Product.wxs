@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?define ProductName="SetupProject1" ?>
+<?define ProductVersion="1.2.0.0" ?>
+<?define ProductCode="b7bc7c6f-7a4e-4973-be36-eca8e3427c97"?>
+<?define UpgradeCode="06a81104-1e30-463d-87e1-e8a79b4c682a"?>
+<?define Manufacturer="MyCompany"?>
+  
+
+
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Product Id="$(var.ProductCode)" 
+         Name="$(var.ProductName)" 
+         Language="1033" 
+         Version="$(var.ProductVersion)" 
+         Manufacturer="$(var.Manufacturer)"
+         UpgradeCode="$(var.UpgradeCode)">
+    
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+
+	  <MajorUpgrade 
+           Schedule="afterInstallExecute"
+           AllowDowngrades="no"
+           DowngradeErrorMessage="A newer version of [ProductName] is already installed."
+           AllowSameVersionUpgrades="no"/>
+
+		<MediaTemplate />
+    
+    
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" ></Property>
+    	<!-- <WixVariable Id="WixUILicenseRtf" Overridable="yes" Value="License.rtf"/> -->
+    <UIRef Id="WixUI_Wizzard"/>
+
+
+		<Feature Id="ProductFeature" Title="$(var.ProductName)" Level="1">
+			<ComponentGroupRef Id="ProductComponents" />
+		</Feature>
+	</Product>
+
+	<Fragment>
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="ProgramFilesFolder">
+				<Directory Id="INSTALLFOLDER" Name="$(var.ProductName)" />
+			</Directory>
+		</Directory>
+	</Fragment>
+
+	<Fragment>
+		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+			<!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
+			<!-- <Component Id="ProductComponent"> -->
+				<!-- TODO: Insert files, registry keys, and other resources here. -->
+			<!-- </Component> -->
+      <Component Id="ProductComponent" Guid="D13D2B6E-951F-47B5-844E-C00056FB64C4">
+        <File Id="TrickyCursorInst.exe"
+              Source ="../Debug/TrickyCursor.exe">
+        </File>
+      </Component>
+
+		</ComponentGroup>
+	</Fragment>
+
+</Wix>

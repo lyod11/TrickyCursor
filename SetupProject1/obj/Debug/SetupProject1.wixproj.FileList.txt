@@ -1,0 +1,9 @@
+obj\Debug\File.wixobj
+obj\Debug\Product.wixobj
+D:\lp\BaseCamp\TrickyCursor\SetupProject1\bin\Debug\cab1.cab
+D:\lp\BaseCamp\TrickyCursor\SetupProject1\bin\Debug\SetupProject1.msi
+D:\lp\BaseCamp\TrickyCursor\SetupProject1\bin\Debug\SetupProject1.wixpdb
+obj\Debug\SetupProject1.wixproj.BindContentsFileListen-US.txt
+obj\Debug\SetupProject1.wixproj.BindOutputsFileListen-US.txt
+obj\Debug\SetupProject1.wixproj.BindBuiltOutputsFileListen-US.txt
+obj\Debug\WixUI_Wizzard.wixobj
